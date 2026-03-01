@@ -42,7 +42,8 @@ WORKDIR /app
 # Runtime libs only
 RUN apk add --no-cache \
     libpq \
-    tini
+    tini \
+    curl
 
 # Copy installed Python site-packages and binaries
 COPY --from=builder /usr/local /usr/local
