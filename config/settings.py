@@ -180,9 +180,11 @@ SPECTACULAR_SETTINGS = {
 }
 
 # celery configs    
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+
 CELERY_BEAT_SCHEDULE = {
-    "external-batch-every-2-hours": {
+    "external-batch-every-5-seconds": {
         "task": "apps.batch_runs.tasks.scheduled_external_batch",
-        "schedule": 60 * 60 * 2,
+        "schedule": 5.0,
     }
 }

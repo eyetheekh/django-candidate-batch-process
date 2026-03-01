@@ -9,7 +9,7 @@ from apps.candidates.models import Candidate
 from apps.batch_runs.models import BatchRun, CandidateAttempt
 
 
-EXTERNAL_API_URL = "https://dev.micro.mgsigma.net/batch/process"
+EXTERNAL_API_URL = "http://127.0.0.1:8001/batch/process"
 MAX_BATCH_SIZE = 10
 PICK_TIMEOUT_MINUTES = 30
 
