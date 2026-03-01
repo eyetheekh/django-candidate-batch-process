@@ -32,13 +32,44 @@ services:
       timeout: 5s
       retries: 5
 
+  migrater:
+    image: candidate_ingestion_batch_processing:django-v1.0.0
+    build:
+      context: .
+      dockerfile: Dockerfiles/Dockerfile
+    container_name: django_migrater
+    command: python manage.py migrate
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  seeder:
+    image: candidate_ingestion_batch_processing:django-v1.0.0
+    build:
+      context: .
+      dockerfile: Dockerfiles/Dockerfile
+    container_name: django_seeder
+    command: python manage.py seed --candidates 1000
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrater:
+        condition: service_completed_successfully
+    restart: "no"
+
   web:
     image: candidate_ingestion_batch_processing:django-v1.0.0
     build:
       context: .
       dockerfile: Dockerfiles/Dockerfile
     container_name: django_web
-    command: 'gunicorn config.wsgi:application --bind 0.0.0.0:8000'
+    command: >
+      sh -c "gunicorn config.wsgi:application --bind 0.0.0.0:8000"
     ports:
       - '8000:8000'
     env_file:
@@ -50,7 +81,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      test: ["CMD", "curl", "-f", "http://0.0.0.0:8000/api/health/"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -69,6 +100,10 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      web:
+        condition: service_healthy
+      seeder:
+        condition: service_completed_successfully
     restart: unless-stopped
 
   beat:
@@ -85,6 +120,10 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      web:
+        condition: service_healthy
+      seeder:
+        condition: service_completed_successfully
     volumes:
       - 'celerybeat_data:/app/celerybeat'
     restart: unless-stopped
@@ -93,3 +132,7 @@ volumes:
   postgres_data: null
   redis_data: null
   celerybeat_data: null
+
+networks:
+  default:
+    name: candidate_ingestion_batch_processing
