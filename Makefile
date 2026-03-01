@@ -23,7 +23,7 @@ NAME ?=
 
 .PHONY: help \
 	run runserver \
-	migrate mgr mkmgr showmigrations sqlmigrate flush \
+	migrate mgr mkmgr showmigrations sqlmigrate flush seed \
 	su createsuperuser shell dbshell \
 	test check \
 	collectstatic clearsessions \
@@ -46,6 +46,7 @@ help:
 	@echo " showmigrations    Show migration status"
 	@echo " sqlmigrate        Show SQL for migration (APP=x NAME=0001)"
 	@echo " flush             Remove all database data (keeps schema)"
+	@echo " seed              Seed the database with dummy users and 1000 candidates"
 	@echo ""
 	@echo " su                Create admin superuser"
 	@echo " shell             Open Django shell"
@@ -92,6 +93,9 @@ sqlmigrate:
 
 flush:
 	$(DJANGO) flush --noinput
+
+seed:
+	$(DJANGO) seed --candidates 1000
 
 # -----------------------------------------------------------------------------
 # Users / Shell
