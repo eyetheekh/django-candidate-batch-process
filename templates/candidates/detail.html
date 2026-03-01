@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}Candidate Details{% endblock %}
 
 {% block content %}
 
-<h2>Candidate Dashboard</h2>
+<h2>Candidate Details</h2>
 
 <table class="table">
     <thead>
@@ -23,7 +23,6 @@
     </thead>
 
     <tbody>
-        {% for candidate in candidates %}
         <tr>
             <td>{{ candidate.name }}</td>
             <td>{{ candidate.email }}</td>
@@ -52,12 +51,12 @@
 
             {% if user.role == "ADMIN" %}
             <td>
-                <a href="{% url 'candidate_detail' candidate.id %}">View</a>
                 <a href="{% url 'candidate_edit' candidate.id %}">Edit</a>
             </td>
             {% endif %}
+
+
         </tr>
-        {% endfor %}
     </tbody>
 </table>
 

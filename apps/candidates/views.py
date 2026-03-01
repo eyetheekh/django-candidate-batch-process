@@ -7,6 +7,13 @@ from apps.core.permissions import role_required
 
 @login_required
 @role_required("ADMIN")
+def candidate_detail(request, pk):
+    candidate = get_object_or_404(Candidate, pk=pk)
+    return render(request, "candidates/detail.html", {"candidate": candidate})
+
+
+@login_required
+@role_required("ADMIN")
 def candidate_edit(request, pk):
     candidate = get_object_or_404(Candidate, pk=pk)
 
@@ -18,7 +25,9 @@ def candidate_edit(request, pk):
     else:
         form = CandidateForm(instance=candidate)
 
-    return render(request, "candidates/edit.html", {"form": form})
+    return render(
+        request, "candidates/edit.html", {"form": form, "candidate": candidate}
+    )
 
 
 @login_required
