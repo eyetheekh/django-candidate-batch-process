@@ -162,7 +162,7 @@ SIMPLE_JWT = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=24),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 
     "ROTATE_REFRESH_TOKENS": True,
@@ -177,4 +177,12 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Candidate ingestion and batch processing API",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+}
+
+# celery configs    
+CELERY_BEAT_SCHEDULE = {
+    "external-batch-every-2-hours": {
+        "task": "apps.batch_runs.tasks.scheduled_external_batch",
+        "schedule": 60 * 60 * 2,
+    }
 }
