@@ -9,7 +9,7 @@ def reports_dashboard(request):
 
     return render(
         request,
-        "reports/index.html",
+        "dashboard/index.html",
         {
             "candidates": candidates,
         },
