@@ -11,8 +11,8 @@ from apps.batch_runs.models import BatchRun, CandidateAttempt
 
 
 EXTERNAL_API_URL = getattr(settings, 'EXTERNAL_BATCH_API_URL', "http://127.0.0.1:8001/batch/process")
-MAX_BATCH_SIZE = getattr(settings, 'MAX_BATCH_SIZE', 10)
-PICK_TIMEOUT_MINUTES = 5
+MAX_BATCH_SIZE = int(getattr(settings, 'MAX_BATCH_SIZE', 10))
+PICK_TIMEOUT_MINUTES = int(getattr(settings, 'PICK_TIMEOUT_MINUTES', 10))
 
 
 def run_external_batch():

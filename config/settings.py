@@ -210,7 +210,7 @@ EXTERNAL_BATCH_API_URL = env('EXTERNAL_BATCH_API_URL', default='http://127.0.0.1
 CELERY_BEAT_SCHEDULE = {
     "external-batch-every-5-seconds": {
         "task": "apps.batch_runs.tasks.scheduled_external_batch",
-        "schedule": 5.0,
+        "schedule": int(env('SCHEDULED_BEAT_INTERVAL', default=120)),
     }
 }
 
