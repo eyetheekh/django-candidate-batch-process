@@ -8,3 +8,8 @@ class UserAdmin(admin.ModelAdmin):
     search_fields = ("email",)
     list_filter = ("role", "is_active", "created_at")
     ordering = ("-created_at",)
+
+    def save_model(self, request, obj, form, change):
+        if form.cleaned_data.get("password"):
+            obj.set_password(form.cleaned_data["password"])
+        super().save_model(request, obj, form, change)
