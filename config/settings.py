@@ -147,6 +147,7 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "EXCEPTION_HANDLER": "api.exceptions.custom_exception_handler",
 
 }
 
@@ -172,7 +173,7 @@ SIMPLE_JWT = {
 # spectacular docs
 SPECTACULAR_SETTINGS = {
     "TITLE": "MSigma Candidate Processing API",
-    "DESCRIPTION": "JWT secured candidate ingestion and batch processing API",
+    "DESCRIPTION": "Candidate ingestion and batch processing API",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
 }

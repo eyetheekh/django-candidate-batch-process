@@ -1,4 +1,5 @@
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework import serializers
 
 
 class LoginSerializer(TokenObtainPairSerializer):
@@ -22,3 +23,7 @@ class LoginSerializer(TokenObtainPairSerializer):
         data["role"] = self.user.role
 
         return data
+
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField()

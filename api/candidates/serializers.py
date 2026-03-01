@@ -3,6 +3,8 @@ from apps.candidates.models import Candidate
 
 
 class CandidateSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(validators=[]) # disable default unique email validator for status code: 409 compatability
+    
     class Meta:
         model = Candidate
         fields = [
@@ -29,19 +31,6 @@ class CandidateSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-
-    def validate_email(self, value):
-        qs = Candidate.objects.filter(email=value)
-
-        if self.instance:
-            qs = qs.exclude(pk=self.instance.pk)
-
-        if qs.exists():
-            raise serializers.ValidationError(
-                "Candidate with this email already exists."
-            )
-
-        return value
 
     def validate(self, attrs):
         link = attrs.get("link")
