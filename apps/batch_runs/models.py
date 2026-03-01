@@ -21,10 +21,10 @@ class BatchRun(models.Model):
     batch_size = models.PositiveIntegerField(default=0)
     success_count = models.PositiveIntegerField(default=0)
     failed_count = models.PositiveIntegerField(default=0)
+    total_processed = models.IntegerField(default=0)
 
     is_deleted = models.BooleanField(default=False)
     tenant_id = models.UUIDField(null=True, blank=True)
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
