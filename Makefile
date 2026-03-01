@@ -1,36 +1,169 @@
-# Makefile for convenient Django project commands
+# -----------------------------------------------------------------------------
+# Django Makefile
+# -----------------------------------------------------------------------------
+# Usage:
+#   make help
+#   make run
+#   make run PORT=9000
+#   make startapp APP=users
+#   make sqlmigrate APP=users NAME=0001
+# -----------------------------------------------------------------------------
 
 # Django manage.py helper
-DJANGO=python manage.py
+DJANGO = python manage.py
 
-.PHONY: help run migrate makemigrations create superuser test shell collectstatic startapp startproject
+# Default variables (can be overridden)
+PORT ?= 8000
+APP ?=
+NAME ?=
+
+# -----------------------------------------------------------------------------
+# PHONY TARGETS
+# -----------------------------------------------------------------------------
+
+.PHONY: help \
+	run runserver \
+	migrate mgr mkmgr showmigrations sqlmigrate flush \
+	su createsuperuser shell dbshell \
+	test check \
+	collectstatic clearsessions \
+	startapp startproject \
+	loaddata dumpdata \
+	makemessages compilemessages
+
+# -----------------------------------------------------------------------------
+# Help
+# -----------------------------------------------------------------------------
 
 help:
-	@echo "Available commands:"
-	@echo "  run            - start development server (default 8000)"
-	@echo "  mgr            - apply database migrations"
-	@echo "  mkmgr          - create new migrations for apps"
-	@echo "  su             - create an admin user interactively"
-	@echo "  test           - run test suite"
-	@echo "  shell          - open Django shell"
-	@echo "  collectstatic  - collect static files"
-	@echo "  startapp       - create a new Django app (usage: make startapp APP=name)"
-	@echo "  startproject   - create a new Django project (usage: make startproject NAME=name)"
+	@echo ""
+	@echo "Django Development Commands"
+	@echo "------------------------------------------------------------------"
+	@echo " run               Start development server (PORT=8000)"
+	@echo ""
+	@echo " migrate | mgr     Apply pending database migrations"
+	@echo " mkmgr             Create migrations from model changes"
+	@echo " showmigrations    Show migration status"
+	@echo " sqlmigrate        Show SQL for migration (APP=x NAME=0001)"
+	@echo " flush             Remove all database data (keeps schema)"
+	@echo ""
+	@echo " su                Create admin superuser"
+	@echo " shell             Open Django shell"
+	@echo " dbshell           Open database shell"
+	@echo ""
+	@echo " test              Run Django tests"
+	@echo " check             Run Django system checks"
+	@echo ""
+	@echo " collectstatic     Collect static files"
+	@echo " clearsessions     Remove expired sessions"
+	@echo ""
+	@echo " startapp          Create new app (APP=name)"
+	@echo " startproject      Create new project (NAME=name)"
+	@echo ""
+	@echo " loaddata          Load fixtures (NAME=file)"
+	@echo " dumpdata          Export database to dump.json"
+	@echo ""
+	@echo " makemessages      Extract translation strings"
+	@echo " compilemessages   Compile translation files"
+	@echo ""
 
-su:
+# -----------------------------------------------------------------------------
+# Server
+# -----------------------------------------------------------------------------
+
+run runserver:
+	$(DJANGO) runserver 0.0.0.0:$(PORT)
+
+# -----------------------------------------------------------------------------
+# Migrations
+# -----------------------------------------------------------------------------
+
+migrate mgr:
+	$(DJANGO) migrate
+
+mkmgr:
+	$(DJANGO) makemigrations
+
+showmigrations:
+	$(DJANGO) showmigrations
+
+sqlmigrate:
+	$(DJANGO) sqlmigrate $(APP) $(NAME)
+
+flush:
+	$(DJANGO) flush --noinput
+
+# -----------------------------------------------------------------------------
+# Users / Shell
+# -----------------------------------------------------------------------------
+
+su createsuperuser:
 	$(DJANGO) createsuperuser
-
-test:
-	$(DJANGO) test
 
 shell:
 	$(DJANGO) shell
 
+dbshell:
+	$(DJANGO) dbshell
+
+# -----------------------------------------------------------------------------
+# Testing & Checks
+# -----------------------------------------------------------------------------
+
+test:
+	$(DJANGO) test
+
+check:
+	$(DJANGO) check
+
+# -----------------------------------------------------------------------------
+# Static & Sessions
+# -----------------------------------------------------------------------------
+
 collectstatic:
 	$(DJANGO) collectstatic --noinput
 
+clearsessions:
+	$(DJANGO) clearsessions
+
+# -----------------------------------------------------------------------------
+# Project Scaffolding
+# -----------------------------------------------------------------------------
+
 startapp:
+	@if [ -z "$(APP)" ]; then \
+		echo "ERROR: Provide APP name → make startapp APP=myapp"; \
+		exit 1; \
+	fi
 	$(DJANGO) startapp $(APP)
 
 startproject:
+	@if [ -z "$(NAME)" ]; then \
+		echo "ERROR: Provide NAME → make startproject NAME=myproj"; \
+		exit 1; \
+	fi
 	$(DJANGO) startproject $(NAME)
+
+# -----------------------------------------------------------------------------
+# Fixtures
+# -----------------------------------------------------------------------------
+
+loaddata:
+	@if [ -z "$(NAME)" ]; then \
+		echo "ERROR: Provide fixture name → make loaddata NAME=data.json"; \
+		exit 1; \
+	fi
+	$(DJANGO) loaddata $(NAME)
+
+dumpdata:
+	$(DJANGO) dumpdata > dump.json
+
+# -----------------------------------------------------------------------------
+# Internationalization
+# -----------------------------------------------------------------------------
+
+makemessages:
+	$(DJANGO) makemessages -a
+
+compilemessages:
+	$(DJANGO) compilemessages
