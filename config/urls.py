@@ -22,4 +22,7 @@ urlpatterns = [
     path("users/", include("apps.core.urls")),
     path("candidates/", include("apps.candidates.urls")),
     path("", include("apps.dashboard.urls")),
+
+    # drf
+    path("api/", include("api.urls")),
 ]
