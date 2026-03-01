@@ -1,26 +1,95 @@
 version: '3.8'
-
 services:
   postgres:
-    image: postgres:16-alpine
+    image: 'postgres:16-alpine'
     container_name: postgres_db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: myapp
+      POSTGRES_DB: prod_candidate_batch_process
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - 'postgres_data:/var/lib/postgresql/data'
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
-    image: redis:7-alpine
+    image: 'redis:7-alpine'
     container_name: redis_cache
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
-      - redis_data:/data
+      - 'redis_data:/data'
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    image: candidate_ingestion_batch_processing:django-v1.0.0
+    build:
+      context: .
+      dockerfile: Dockerfiles/Dockerfile
+    container_name: django_web
+    command: 'gunicorn config.wsgi:application --bind 0.0.0.0:8000'
+    ports:
+      - '8000:8000'
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  worker:
+    image: candidate_ingestion_batch_processing:worker-v1.0.0
+    build:
+      context: .
+      dockerfile: Dockerfiles/Dockerfile
+    container_name: celery_worker
+    command: celery -A apps.core.celery_app worker -l info
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  beat:
+    image: candidate_ingestion_batch_processing:beat-v1.0.0
+    build:
+      context: .
+      dockerfile: Dockerfiles/Dockerfile
+    container_name: celery_beat
+    command: celery -A apps.core.celery_app beat -l info
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - 'celerybeat_data:/app/celerybeat'
+    restart: unless-stopped
 
 volumes:
-  postgres_data:
-  redis_data:
+  postgres_data: null
+  redis_data: null
+  celerybeat_data: null
