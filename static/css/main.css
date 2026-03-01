@@ -123,3 +123,57 @@ button:hover {
 .status-failed {
     background-color: #dc2626;
 }
+/* Pagination */
+.pagination {
+    display: flex;
+    flex-wrap: wrap; /* allow wrapping to next line */
+    justify-content: center;
+    margin-top: 25px;
+    list-style: none;
+    padding-left: 0;
+    gap: 6px; /* spacing between items */
+}
+
+.pagination li {
+    flex: 0 0 auto; /* prevent items from stretching */
+}
+
+.pagination .page-link {
+    display: block;
+    padding: 8px 14px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    color: #2563eb;
+    text-decoration: none;
+    transition: background-color 0.2s, color 0.2s;
+    min-width: 36px; /* consistent size */
+    text-align: center;
+}
+
+.pagination .page-link:hover {
+    background-color: #2563eb;
+    color: #fff;
+}
+
+.pagination .active .page-link {
+    background-color: #2563eb;
+    color: #fff;
+    border-color: #2563eb;
+    cursor: default;
+}
+
+.pagination .disabled .page-link {
+    background-color: #f3f4f6;
+    color: #9ca3af;
+    border-color: #ddd;
+    cursor: not-allowed;
+}
+
+/* Responsive tweak: shrink padding on small screens */
+@media (max-width: 600px) {
+    .pagination .page-link {
+        padding: 6px 10px;
+        font-size: 14px;
+    }
+}
