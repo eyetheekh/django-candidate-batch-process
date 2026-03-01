@@ -3,7 +3,7 @@
 # Django manage.py helper
 DJANGO=python manage.py
 
-.PHONY: help run migrate makemigrations create superuser test shell collectstatic
+.PHONY: help run migrate makemigrations create superuser test shell collectstatic startapp startproject
 
 help:
 	@echo "Available commands:"
@@ -14,15 +14,8 @@ help:
 	@echo "  test           - run test suite"
 	@echo "  shell          - open Django shell"
 	@echo "  collectstatic  - collect static files"
-
-run:
-	$(DJANGO) runserver
-
-mgr:
-	$(DJANGO) migrate
-
-mkmgr:
-	$(DJANGO) makemigrations
+	@echo "  startapp       - create a new Django app (usage: make startapp APP=name)"
+	@echo "  startproject   - create a new Django project (usage: make startproject NAME=name)"
 
 su:
 	$(DJANGO) createsuperuser
@@ -35,3 +28,9 @@ shell:
 
 collectstatic:
 	$(DJANGO) collectstatic --noinput
+
+startapp:
+	$(DJANGO) startapp $(APP)
+
+startproject:
+	$(DJANGO) startproject $(NAME)
