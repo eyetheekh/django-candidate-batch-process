@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'apps.core',
     'apps.candidates',
     'apps.dashboard',
+    'apps.batch_runs',
 
     # drf
     'drf_spectacular',

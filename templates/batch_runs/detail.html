@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Batch Run {{ batch_run.id }}</h1>
+<p>Scheduled: {{ batch_run.scheduled_for }}</p>
+<p>Started: {{ batch_run.started_at }}</p>
+<p>Finished: {{ batch_run.finished_at }}</p>
+<p>Batch size: {{ batch_run.batch_size }}</p>
+<p>Success: {{ batch_run.success_count }}</p>
+<p>Failed: {{ batch_run.failed_count }}</p>
+
+<h2>Candidate Attempts</h2>
+<ul>
+    {% for attempt in attempts %}
+    <li>
+        Candidate {{ attempt.candidate.name }} | Attempt {{ attempt.attempt_no }} | Status: {{ attempt.result_status }}
+        | Error: {{ attempt.error_message }}
+    </li>
+    {% empty %}
+    <li>No attempts recorded for this batch.</li>
+    {% endfor %}
+</ul>
+{% endblock %}

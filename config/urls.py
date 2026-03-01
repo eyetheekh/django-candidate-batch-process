@@ -28,6 +28,7 @@ urlpatterns = [
     path("users/", include("apps.core.urls")),
     path("candidates/", include("apps.candidates.urls")),
     path("", include("apps.dashboard.urls")),
+    path("batch-runs/", include("apps.batch_runs.urls")),
     # drf
     path("api/", include("api.urls")),
 ]

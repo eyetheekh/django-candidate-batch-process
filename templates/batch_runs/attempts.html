@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Candidate Attempts</h1>
+<ul>
+    {% for attempt in attempts %}
+    <li>
+        Candidate {{ attempt.candidate.name }} | Batch {{ attempt.batch_run.id }} | Attempt {{ attempt.attempt_no }} |
+        Status: {{ attempt.result_status }}
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}
