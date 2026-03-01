@@ -5,13 +5,14 @@ from django.db import transaction
 from django.utils import timezone
 from django.db.models import Q
 
+from django.conf import settings
 from apps.candidates.models import Candidate
 from apps.batch_runs.models import BatchRun, CandidateAttempt
 
 
-EXTERNAL_API_URL = "http://127.0.0.1:8001/batch/process"
-MAX_BATCH_SIZE = 10
-PICK_TIMEOUT_MINUTES = 30
+EXTERNAL_API_URL = getattr(settings, 'EXTERNAL_BATCH_API_URL', "http://127.0.0.1:8001/batch/process")
+MAX_BATCH_SIZE = getattr(settings, 'MAX_BATCH_SIZE', 10)
+PICK_TIMEOUT_MINUTES = 5
 
 
 def run_external_batch():

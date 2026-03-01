@@ -12,20 +12,31 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import environ
+import os
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Initialize environment variables
+env = environ.Env(
+    DEBUG=(bool, True),
+    ALLOWED_HOSTS=(list, ['0.0.0.0', '127.0.0.1', 'localhost'])
+)
+
+# Take environment variables from .env file
+environ.Env.read_env(BASE_DIR / '.env')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-iv1g^cjvclb^gzw0+-x$z3r*xnouwx6i2pm8n3mzwf3@!fhoie'
+SECRET_KEY = env('SECRET_KEY', default='django-insecure-iv1g^cjvclb^gzw0+-x$z3r*xnouwx6i2pm8n3mzwf3@!fhoie')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
 
 # custom user model
 AUTH_USER_MODEL = "core.User"
@@ -95,6 +106,16 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+if env('POSTGRES_HOST', default=None) or env('POSTGRES_DB', default=None):
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': env('POSTGRES_DB', default='myapp'),
+        'USER': env('POSTGRES_USER', default='postgres'),
+        'PASSWORD': env('POSTGRES_PASSWORD', default='postgres'),
+        'HOST': env('POSTGRES_HOST', default='127.0.0.1'),
+        'PORT': env('POSTGRES_PORT', default='5432'),
+    }
 
 
 # Password validation
@@ -180,7 +201,10 @@ SPECTACULAR_SETTINGS = {
 }
 
 # celery configs    
-CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+CELERY_BROKER_URL = env('CELERY_BROKER_URL', default=f"redis://{env('REDIS_HOST', default='127.0.0.1')}:{env('REDIS_PORT', default='6379')}/0")
+
+# External Batch API configuration
+EXTERNAL_BATCH_API_URL = env('EXTERNAL_BATCH_API_URL', default='http://127.0.0.1:8001/batch/process')
 
 CELERY_BEAT_SCHEDULE = {
     "external-batch-every-5-seconds": {
