@@ -82,3 +82,44 @@ button:hover {
     color: red;
     margin-bottom: 10px;
 }
+
+/* reports dashboard */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.table th,
+.table td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.table th {
+    background-color: #f3f4f6;
+    text-align: left;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: white;
+}
+
+.status-pending {
+    background-color: #f59e0b;
+}
+
+.status-processing {
+    background-color: #3b82f6;
+}
+
+.status-success {
+    background-color: #16a34a;
+}
+
+.status-failed {
+    background-color: #dc2626;
+}

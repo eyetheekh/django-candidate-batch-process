@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<h2>Candidate Dashboard</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Attempts</th>
+            <th>Last Attempt</th>
+            <th>Picked</th>
+            <th>Created</th>
+            {% if user.role == "ADMIN" %}
+            <th>Actions</th>
+            {% endif %}
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for candidate in candidates %}
+        <tr>
+            <td>{{ candidate.name }}</td>
+            <td>{{ candidate.email }}</td>
+
+            <td>
+                <span class="status-badge status-{{ candidate.status|lower }}">
+                    {{ candidate.status }}
+                </span>
+            </td>
+
+            <td>{{ candidate.attempt_count }}</td>
+
+            <td>
+                {{ candidate.last_attempt_at|default:"—" }}
+            </td>
+
+            <td>
+                {% if candidate.picked_at %}
+                Yes
+                {% else %}
+                No
+                {% endif %}
+            </td>
+
+            <td>{{ candidate.created_at }}</td>
+
+            {% if user.role == "ADMIN" %}
+            <td>
+                <a href="{% url 'candidate_edit' candidate.id %}">Edit</a>
+            </td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

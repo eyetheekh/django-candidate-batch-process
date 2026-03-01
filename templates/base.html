@@ -15,7 +15,14 @@
         </div>
         <div class="nav-right">
             {% if user.is_authenticated %}
+
+            
+            {% if user.role == "ADMIN" %}
+            <a href="{% url 'candidate_create' %}">Create Candidate</a>
+            {% endif %}
+            
             <span>{{ user.email }} ({{ user.role }})</span>
+
             <a href="{% url 'logout' %}">Logout</a>
             {% else %}
             <a href="/users/login/">Login</a>
