@@ -60,7 +60,7 @@ def run_external_batch():
     # Call external API outside transaction
     payload = [
         {
-            "id": c.id,
+            "id": str(c.id),
             "name": c.name,
             "email": c.email,
             "phoneNumber": c.phone_number,
