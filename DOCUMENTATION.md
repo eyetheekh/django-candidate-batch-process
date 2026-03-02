@@ -18,8 +18,6 @@
 ### 1. Project Objective & Overview
 The objective of this project is to design, implement, and justify a production-ready Candidate Processing System. The platform is designed for ingesting candidate data through form submissions and reliably synchronizing them via a batch-processing mechanism to an external service. 
 
-The focus is heavily placed on **correctness**, **fault tolerance**, **clarity of implementation**, and **clean architecture**.
-
 To satisfy the requirements, the system exposes a robust REST API using Django REST Framework (DRF) alongside a classic Django Server-Side Rendered (SSR) web interface for administrators.
 
 ---
@@ -40,7 +38,7 @@ To satisfy the requirements, the system exposes a robust REST API using Django R
 Following clean architecture principles, the platform clearly separates the RESTful API endpoints from the traditional SSR Web dashboard, while sharing the same underlying core business logic (Models and Services).
 
 ```text
-msigma-django-assignment-2/
+django-assignment/
 ├── config/           # Django settings, root URL routing, WSGI/ASGI
 ├── apps/             # Core business logic, Models, SSR Templates, Forms
 │   ├── core/         # Custom User models (Admin / Reviewers) and Auth
@@ -85,7 +83,7 @@ Provides complete system auditability for the Job Queue.
 ### 5. Authentication & Role-Based Access Control (RBAC)
 
 The system relies on JSON Web Tokens (JWT) for the API endpoints (excluding `/auth/` and `/health/`).
-*   **Token Expiry & Refresh:** We implement a short-lived Access Token (15-24 minutes) paired with a longer-lived Refresh Token (1 day). Blacklisting is enabled post-rotation.
+*   **Token Expiry & Refresh:** Implement a short-lived Access Token (15-24 minutes) paired with a longer-lived Refresh Token (1 day). Blacklisting is enabled post-rotation.
 *   **Role-Based Access Control:**
     *   **ADMIN:** Granted full read and write access. Mutates candidate state, manually triggers batch runs, and can generate reports.
     *   **REVIEWER:** Granted safe read-only access. Can access reporting and analytical endpoints, perform candidate searches, inspect batches, but cannot mutate data.
