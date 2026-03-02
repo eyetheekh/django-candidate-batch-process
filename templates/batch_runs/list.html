@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Batch Runs{% endblock %}
+
+{% block content %}
+<h2>Batch Runs</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Tenant</th>
+            <th>Scheduled</th>
+            <th>Started</th>
+            <th>Finished</th>
+            <th>Batch Size</th>
+            <th>Success</th>
+            <th>Failed</th>
+            <th>Deleted</th>
+            <th>Created</th>
+            <th>Updated</th>
+            {% if user.role == "ADMIN" %}
+            <th>Actions</th>
+            {% endif %}
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for run in batch_runs %}
+        <tr>
+            <td>{{ run.id }}</td>
+            <td>{{ run.tenant_id }}</td>
+            <td>{{ run.scheduled_for }}</td>
+            <td>{{ run.started_at|default:"—" }}</td>
+            <td>{{ run.finished_at|default:"—" }}</td>
+            <td>{{ run.batch_size }}</td>
+            <td>{{ run.success_count }}</td>
+            <td>{{ run.failed_count }}</td>
+            <td>{{ run.is_deleted }}</td>
+            <td>{{ run.created_at }}</td>
+            <td>{{ run.updated_at }}</td>
+
+            {% if user.role == "ADMIN" %}
+            <td>
+                <a href="{% url 'batchrun-detail' run.id %}">View</a> |
+            </td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

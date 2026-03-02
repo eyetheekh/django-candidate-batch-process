@@ -1,0 +1,196 @@
+version: '3.8'
+
+services:
+
+  traefik:
+    image: traefik:v3.6
+    command:
+      - --providers.file.filename=/dynamic_conf.yml
+      - --api.dashboard=true
+      - --api.insecure=false
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./certs:/certs
+      - ./traefik.yml:/dynamic_conf.yml
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: prod_candidate_batch_process
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  migrater:
+    image: candidate_ingestion_batch_processing:django-v1.0.0
+    build:
+      context: .
+      dockerfile: Dockerfiles/Dockerfile
+    command: python manage.py migrate
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+
+  seeder:
+    image: candidate_ingestion_batch_processing:django-v1.0.0
+    build:
+      context: .
+      dockerfile: Dockerfiles/Dockerfile
+    command: python manage.py seed --candidates 1000
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrater:
+        condition: service_completed_successfully
+    restart: "no"
+
+
+  web:
+    image: candidate_ingestion_batch_processing:django-v1.0.0
+    build:
+      context: .
+      dockerfile: Dockerfiles/Dockerfile
+    command: >
+      sh -c "gunicorn config.wsgi:application
+      --bind 0.0.0.0:8000
+      --workers 4
+      --threads 4"
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      seeder:
+        condition: service_completed_successfully
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.django.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.django.entrypoints=websecure"
+      - "traefik.http.routers.django.tls=true"
+      - "traefik.http.services.django.loadbalancer.server.port=8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+
+  worker:
+    image: candidate_ingestion_batch_processing:worker-v1.0.0
+    build:
+      context: .
+      dockerfile: Dockerfiles/Dockerfile
+    command: celery -A apps.core.celery_app worker -l info
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_started
+      seeder:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+
+  beat:
+    image: candidate_ingestion_batch_processing:beat-v1.0.0
+    build:
+      context: .
+      dockerfile: Dockerfiles/Dockerfile
+    command: celery -A apps.core.celery_app beat -l info
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_started
+      seeder:
+        condition: service_completed_successfully
+    volumes:
+      - celerybeat_data:/app/celerybeat
+    restart: unless-stopped
+
+
+  flower:
+    image: candidate_ingestion_batch_processing:worker-v1.0.0
+    build:
+      context: .
+      dockerfile: Dockerfiles/Dockerfile
+    command: >
+      celery
+      -A apps.core.celery_app
+      flower
+      --port=5555
+      --broker=${CELERY_BROKER_URL}
+      --url_prefix=flower
+    env_file:
+      - .env
+    depends_on:
+      redis:
+        condition: service_healthy
+      worker:
+        condition: service_started
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.flower.rule=PathPrefix(`/flower`)"
+      - "traefik.http.routers.flower.entrypoints=websecure"
+      - "traefik.http.routers.flower.tls=true"
+      - "traefik.http.services.flower.loadbalancer.server.port=5555"
+      - "traefik.http.routers.flower.middlewares=admin-auth"
+      - "traefik.http.middlewares.admin-auth.basicauth.users=admin:$$apr1$$t4m2WsC9$$nYQuMKON9tDD7gOOHimjt1"
+
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  celerybeat_data:
+
+networks:
+  default:
+    name: candidate_ingestion_batch_processing

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Candidate{% endblock %}
+
+{% block content %}
+<h2>Edit Candidate</h2>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">EDIT</button>
+    <a href="{% url 'candidate_detail' candidate.id %}" class="btn btn-secondary">View</a>
+</form>
+
+{% endblock %}
