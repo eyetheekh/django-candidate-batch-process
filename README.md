@@ -73,16 +73,69 @@ uv run celery -A config worker -l info
 uv run celery -A config beat -l info
 ```
 
-### 3. Docker Setup
-You can easily spin up the complete environment (PostgreSQL + Redis + Django Web + Celery Worker + Celery Beat) using Docker Compose:
+### 3. Docker Production Architecture
+
+                          ┌─────────────────────┐
+                          │       Traefik       │
+                          │  Reverse Proxy +    │
+                          │  TLS + Routing      │
+                          └─────────┬───────────┘
+                                    │
+                    ┌───────────────┴────────────────┐
+                    │                                │
+          ┌─────────▼─────────┐            ┌─────────▼─────────┐
+          │       Web         │            │      Flower       │
+          │ Django + Gunicorn │            │ Celery Monitoring │
+          │ Port: 8000        │            │ Port: 5555        │
+          └─────────┬─────────┘            └─────────┬─────────┘
+                    │                                │
+                    │                                │
+          ┌─────────▼─────────┐            ┌─────────▼─────────┐
+          │      Worker       │            │       Beat        │
+          │ Celery Workers    │            │ Celery Scheduler  │
+          └─────────┬─────────┘            └─────────┬─────────┘
+                    │                                │
+                    └───────────────┬────────────────┘
+                                    │
+                          ┌─────────▼─────────┐
+                          │       Redis       │
+                          │  Message Broker   │
+                          │  Cache Storage    │
+                          └─────────┬─────────┘
+                                    │
+                          ┌─────────▼─────────┐
+                          │     Postgres      │
+                          │  Primary DB       │
+                          └─────────┬─────────┘
+                                    │
+                    ┌───────────────┴────────────────┐
+                    │                                │
+          ┌─────────▼─────────┐            ┌─────────▼─────────┐
+          │     Migrater      │            │      Seeder       │
+          │ Django Migrations │            │ Seed Initial Data │
+          └───────────────────┘            └───────────────────┘
+
+
+#### Data Volumes
+- postgres_data → Persistent DB storage
+- redis_data → Redis persistence
+- celerybeat_data → Celery beat schedule persistence
+
+#### Network
+- candidate_ingestion_batch_processing (default network)
+
+The project utilizes a robust production-grade architecture defined in `docker-compose.yml`:
+- **Traefik**: Acts as a reverse proxy, load balancer, and SSL termination endpoint. Auto-discovers containers.
+- **Django Applications**: The `web` container runs on `gunicorn` behind Traefik.
+- **Background Tasks**: Separate containers for `worker` and `beat`.
+- **Initialization**: Dedicated short-lived containers (`migrater` and `seeder`) automatically execute schema migrations and seed dummy data asynchronously before the web container hits live status.
+- **Monitoring**: Celery `flower` dashboard securely nested behind Traefik.
+
+Run the entire cluster gracefully:
 ```bash
 docker-compose up --build
 ```
-Once the containers are running, you can seed the database within the web container:
-```bash
-docker-compose exec web make migrate
-docker-compose exec web make seed
-```
+*Note: Since the `seeder` container is baked into the deployment orchestration, there is no need to manually run `make seed` or `make migrate` logic. The system initializes it automatically!*
 
 ---
 

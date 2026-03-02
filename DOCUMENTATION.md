@@ -149,18 +149,68 @@ All endpoints return mapped explicit status codes mapping to standard errors (40
 
 ### 9. Running the Application
 
-The project heavily embraces containerization for frictionless deployment.
+The project heavily embraces containerization alongside a robust micro-service architecture for frictionless deployment.
 
-#### Method 1: Docker Compose (Preferred)
+#### Method 1: Docker Compose Production Architecture (Preferred)
+
+                          ┌─────────────────────┐
+                          │       Traefik       │
+                          │  Reverse Proxy +    │
+                          │  TLS + Routing      │
+                          └─────────┬───────────┘
+                                    │
+                    ┌───────────────┴────────────────┐
+                    │                                │
+          ┌─────────▼─────────┐            ┌─────────▼─────────┐
+          │       Web         │            │      Flower       │
+          │ Django + Gunicorn │            │ Celery Monitoring │
+          │ Port: 8000        │            │ Port: 5555        │
+          └─────────┬─────────┘            └─────────┬─────────┘
+                    │                                │
+                    │                                │
+          ┌─────────▼─────────┐            ┌─────────▼─────────┐
+          │      Worker       │            │       Beat        │
+          │ Celery Workers    │            │ Celery Scheduler  │
+          └─────────┬─────────┘            └─────────┬─────────┘
+                    │                                │
+                    └───────────────┬────────────────┘
+                                    │
+                          ┌─────────▼─────────┐
+                          │       Redis       │
+                          │  Message Broker   │
+                          │  Cache Storage    │
+                          └─────────┬─────────┘
+                                    │
+                          ┌─────────▼─────────┐
+                          │     Postgres      │
+                          │  Primary DB       │
+                          └─────────┬─────────┘
+                                    │
+                    ┌───────────────┴────────────────┐
+                    │                                │
+          ┌─────────▼─────────┐            ┌─────────▼─────────┐
+          │     Migrater      │            │      Seeder       │
+          │ Django Migrations │            │ Seed Initial Data │
+          └───────────────────┘            └───────────────────┘
+
+
+#### Data Volumes
+- postgres_data → Persistent DB storage
+- redis_data → Redis persistence
+- celerybeat_data → Celery beat schedule persistence
+
+#### Network
+- candidate_ingestion_batch_processing (default network)
 ```bash
 docker-compose up --build
 ```
-Orchestrates 5 interlinked containers:
--   `postgres_db` & `postgres_data` mapping.
--   `redis_cache` & `redis_data` mapping.
--   `django_web` (Django Gunicorn WSGI container bound to 0.0.0.0:8000)
--   `celery_worker` (Task execution core)
--   `celery_beat` (Scheduler daemon)
+The `docker-compose.yml` cleanly orchestrates a real-world edge deployment:
+-   **Traefik Reverse Proxy & Load Balancer**: Handles all incoming traffic, functioning as a high-performance Layer 7 load balancer. It manages seamless routing and **SSL/TLS termination** on port 443 with automated HTTP to HTTPS redirections mapping traffic natively into the Docker network.
+-   **Data Stores**: `postgres` & `redis` (alpine versions configured safely).
+-   **Django Backend (`web`)**: Container exposing `gunicorn` threaded workers handling business logic APIs and SSR views. It is intentionally decoupled logic behind Traefik.
+-   **Automated Lifecycle Management (`migrater` & `seeder`)**: Dedicated volatile containers that execute `python manage.py migrate` and `python manage.py seed --candidates 1000`. They execute completely independently and ensure the DB operates structurally unharmed *prior* to `web` load-ups.
+-   **Asynchronous Engine**: `worker` running core tasks, alongside `beat` dispatching queue cadences. 
+-   **Flower Monitoring (`flower`)**: Real-time Celery dashboard, securely gated behind Traefik basic auth middleware and TLS constraints, exposing load visualization.
 
 #### Method 2: Local Bare Metal Setup
 ```bash
