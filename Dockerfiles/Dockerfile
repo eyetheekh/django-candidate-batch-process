@@ -30,7 +30,7 @@ FROM builder AS appbuild
 WORKDIR /app
 COPY . .
 
-RUN python manage.py collectstatic --noinput || true
+RUN python manage.py collectstatic --noinput 
 
 FROM python:3.12-alpine AS runtime
 
