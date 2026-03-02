@@ -23,6 +23,15 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.WARNING("Starting database seed..."))
 
+        # prevent re-seeding
+        if Candidate.objects.exists():
+            self.stdout.write(
+                self.style.WARNING(
+                    "Database already seeded. Skipping candidate generation."
+                )
+            )
+            return
+
         # Admin User
         admin_email = 'admin@dj.dj'
         if not User.objects.filter(email=admin_email).exists():
